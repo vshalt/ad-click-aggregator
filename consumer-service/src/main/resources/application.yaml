@@ -1,0 +1,68 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: consumerservice
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: ${SPRING_DATASOURCE_MAX_POOL_SIZE:16}
+      minimum-idle: 4
+      data-source-properties:
+        prepareThreshold: 0
+        reWriteBatchedInserts: true
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      ack-mode: manual
+      type: batch
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      max-poll-records: 2000
+      properties:
+        fetch.min.bytes: 1048576
+        fetch.max.wait.ms: 100
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 1000
+        order_inserts: true
+        order_updates: true
+
+app:
+  kafka:
+    ingestion-group-id: ${SPRING_KAFKA_INGESTION_GROUP_ID:consumer}
+    ingestion-concurrency: ${SPRING_KAFKA_INGESTION_CONCURRENCY:1}
+    ingestion-topic-name: ${SPRING_KAFKA_INGESTION_TOPIC_NAME:ingestion}
+
+    ingestion-dlt-topic-name: ${SPRING_KAFKA_INGESTION_DLT_TOPIC_NAME:ingestion-dlt}
+    ingestion-dlt-topic-partitions: ${SPRING_KAFKA_INGESTION_DLT_TOPIC_PARTITIONS:1}
+    ingestion-dlt-topic-replicas: ${SPRING_KAFKA_INGESTION_DLT_TOPIC_REPLICAS:1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        consumer.batch.duration: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true

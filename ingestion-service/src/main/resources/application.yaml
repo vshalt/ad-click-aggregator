@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ingestionservice
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      batch-size: 65536
+      properties:
+        linger.ms: 20
+      compression-type: lz4
+      acks: 1
+    consumer:
+      group-id: log-producer
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+app:
+  kafka:
+    ingestion-topic-name: ${SPRING_KAFKA_INGESTION_TOPIC_NAME:ingestion}
+    ingestion-topic-partitions: ${SPRING_KAFKA_INGESTION_TOPIC_PARTITIONS:1}
+    ingestion-topic-replicas: ${SPRING_KAFKA_INGESTION_TOPIC_REPLICAS:1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
