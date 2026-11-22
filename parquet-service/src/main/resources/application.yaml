@@ -1,0 +1,56 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: parquetservice
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      ack-mode: manual
+      type: batch
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      max-poll-records: 5000
+      properties:
+        fetch.min.bytes: 1048576
+        fetch.max.wait.ms: 1000
+
+app:
+  kafka:
+    ingestion-topic-name: ${SPRING_KAFKA_INGESTION_TOPIC_NAME:ingestion}
+    parquet-group-id: ${SPRING_KAFKA_PARQUET_GROUP_ID:parquet-writer}
+    parquet-concurrency: ${SPRING_KAFKA_PARQUET_CONCURRENCY:4}
+
+    ingestion-dlt-topic-name: ${SPRING_KAFKA_PARQUET_DLT_TOPIC_NAME:ingestion-parquet-dlt}
+    ingestion-dlt-topic-partitions: ${SPRING_KAFKA_PARQUET_DLT_TOPIC_PARTITIONS:1}
+    ingestion-dlt-topic-replicas: ${SPRING_KAFKA_PARQUET_DLT_TOPIC_REPLICAS:1}
+
+  parquet:
+    output-dir: ${PARQUET_OUTPUT_DIR:./data/parquet}
+    compression: ${PARQUET_COMPRESSION:zstd}
+    duckdb-threads: ${PARQUET_DUCKDB_THREADS:2}
+    duckdb-memory-limit: ${PARQUET_DUCKDB_MEMORY_LIMIT:1GB}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        parquet.batch.duration: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true

@@ -67,6 +67,8 @@ services:
     build:
       context: .
       dockerfile: consumer-service/Dockerfile
+      args:
+        MAVEN_EXTRA_ARGS: ${MAVEN_EXTRA_ARGS:-}
     depends_on:
       - postgres
       - kafka
@@ -83,6 +85,27 @@ services:
       SPRING_KAFKA_INGESTION_DLT_TOPIC_REPLICAS: 1
     restart: unless-stopped
 
+  parquet-service:
+    build:
+      context: .
+      dockerfile: parquet-service/Dockerfile
+      args:
+        MAVEN_EXTRA_ARGS: ${MAVEN_EXTRA_ARGS:-}
+    depends_on:
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_INGESTION_TOPIC_NAME: ingestion
+      SPRING_KAFKA_PARQUET_GROUP_ID: parquet-writer
+      SPRING_KAFKA_PARQUET_CONCURRENCY: 4
+      SPRING_KAFKA_PARQUET_DLT_TOPIC_NAME: ingestion-parquet-dlt
+      SPRING_KAFKA_PARQUET_DLT_TOPIC_PARTITIONS: 1
+      SPRING_KAFKA_PARQUET_DLT_TOPIC_REPLICAS: 1
+      PARQUET_OUTPUT_DIR: /data/parquet
+    volumes:
+      - ./data/parquet:/data/parquet
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus
     volumes:
@@ -92,6 +115,7 @@ services:
     depends_on:
       - ingestion-service
       - consumer-service
+      - parquet-service
 
   grafana:
     image: grafana/grafana
