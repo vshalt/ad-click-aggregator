@@ -1,11 +1,12 @@
 # Stage 1: Build
 FROM maven:3.9-eclipse-temurin-25 as builder
+ARG MAVEN_EXTRA_ARGS=""
 WORKDIR /app
 COPY pom.xml .
 COPY consumer-service/pom.xml consumer-service/
-RUN mvn -f consumer-service/pom.xml dependency:go-offline
+RUN mvn -f consumer-service/pom.xml dependency:go-offline $MAVEN_EXTRA_ARGS
 COPY consumer-service/src consumer-service/src
-RUN mvn -f consumer-service/pom.xml package -DskipTests
+RUN mvn -f consumer-service/pom.xml package -DskipTests $MAVEN_EXTRA_ARGS
 
 # Stage 2: Run
 FROM eclipse-temurin:25-jdk-ubi10-minimal
