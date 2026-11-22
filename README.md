@@ -49,7 +49,7 @@ Notes:
 
 ## Performance
 
-![recording](./assets/recording.mov)
+![recording](./assets/recording.gif)
 
 Load tested with k6 (`loadtest/ingestion.js`, constant arrival rate, `POST /api/v1/logs/`) from a separate machine.
 
